@@ -1,63 +1,53 @@
 package ca.example.tweetlocation.model
 
+import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.location.Location
-import ca.example.tweetlocation.data.SessionUtils
-import com.twitter.sdk.android.core.TwitterCore
-import com.twitter.sdk.android.core.models.Search
+import ca.example.tweetlocation.data.TweetRepository
 import com.twitter.sdk.android.core.models.Tweet
 import com.twitter.sdk.android.core.services.params.Geocode
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import java.util.*
 
-class MapsViewModel : ViewModel() {
+class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
 
     companion object {
         private const val DISTANCE = 100
     }
 
-    val tweets: MutableLiveData<Queue<Tweet>> by lazy {
-        MutableLiveData<Queue<Tweet>>()
+    private val searchTweets: MutableLiveData<List<Tweet>> by lazy {
+        MutableLiveData<List<Tweet>>()
+    }
+
+    private val mapTweets: MutableLiveData<List<Tweet>> by lazy {
+        MutableLiveData<List<Tweet>>()
+    }
+
+    fun queryTweets(query: String) {
+        repository.getTweets(query) {
+            searchTweets.value = it
+        }
     }
 
     fun queryTweets(query: String, location: Location) {
-
-        TwitterCore.getInstance().getApiClient(SessionUtils.twitterSession).searchService.tweets(
-            query,
-            Geocode(location.latitude, location.longitude, DISTANCE, Geocode.Distance.KILOMETERS),
-            null,
-            null,
-            "recent",
-            100,
-            null,
-            null,
-            null,
-            null
-        ).enqueue(object : Callback<Search> {
-            override fun onFailure(call: Call<Search>?, t: Throwable?) {
-                //TODO: Handle error
-            }
-
-            override fun onResponse(call: Call<Search>?, response: Response<Search>?) {
-                response?.body()?.tweets?.let { results ->
-                    val filteredResults = LinkedList<Tweet>(results.filter { r -> r.coordinates != null }.sortedBy { r -> r.createdAt })
-                    tweets.value?.let { currentTweets ->
-                        if (filteredResults.count() + currentTweets.count() > 100) {
-                            val difference = Math.abs(filteredResults.count() - currentTweets.count())
-                            for (i in 0..difference) {
-                                currentTweets.poll()
-                            }
-                        }
-                        currentTweets.addAll(LinkedList<Tweet>(filteredResults))
-                        tweets.value = currentTweets
-                    } ?: run {
-                        tweets.value = LinkedList<Tweet>(filteredResults)
-                    }
+        val geocode = Geocode(location.latitude, location.longitude, DISTANCE, Geocode.Distance.KILOMETERS)
+        repository.getTweets(query, geocode) { results ->
+            val filteredResults = results.filter { r -> r.coordinates != null }
+            mapTweets.value?.let { currentTweets ->
+                val oldTweets = ArrayList(currentTweets)
+                oldTweets.addAll(filteredResults.filter { !oldTweets.map { tweet -> tweet.id }.contains(it.id) })
+                oldTweets.sortBy { it.createdAt }
+                if (oldTweets.count() > 100) {
+                    mapTweets.value = oldTweets.drop(oldTweets.count() - 100)
+                } else {
+                    mapTweets.value = oldTweets
                 }
+            } ?: run {
+                mapTweets.value = ArrayList(filteredResults).sortedBy { it.createdAt }
             }
-        })
+        }
     }
+
+    fun getSearchTweets() = searchTweets as LiveData<List<Tweet>>
+
+    fun getMapTweets() = mapTweets as LiveData<List<Tweet>>
 }
