@@ -23,9 +23,7 @@ class TweetListItemViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
                 it.mediaUrlHttps,
                 if (it.videoInfo != null) TweetVideo(
                     it.videoInfo.variants.last().url,
-                    it.videoInfo.aspectRatio.first() / it.videoInfo.aspectRatio.last(),
-                    it.videoInfo.durationMillis,
-                    it.videoInfo.variants.first().contentType
+                    it.videoInfo.aspectRatio.first() / it.videoInfo.aspectRatio.last()
                 ) else null
             )
         }

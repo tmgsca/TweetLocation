@@ -12,45 +12,63 @@ import retrofit2.Response
 class TweetRepository(private val session: TwitterSession) {
 
     fun unfavoriteTweet(id: Long, responseCallback: (Tweet) -> Unit) {
-        TwitterCore.getInstance().getApiClient(SessionUtils.twitterSession).favoriteService.destroy(id, false).enqueue(object : Callback<Tweet> {
-            override fun onFailure(call: Call<Tweet>?, t: Throwable?) {
-                //TODO: Handle error
-            }
-
-            override fun onResponse(call: Call<Tweet>?, response: Response<Tweet>) {
-                if (response.isSuccessful) {
-                    responseCallback(response.body())
+        TwitterCore.getInstance().getApiClient(SessionUtils.twitterSession).favoriteService.destroy(id, false)
+            .enqueue(object : Callback<Tweet> {
+                override fun onFailure(call: Call<Tweet>?, t: Throwable?) {
+                    //TODO: Handle error
                 }
-            }
-        })
+
+                override fun onResponse(call: Call<Tweet>?, response: Response<Tweet>) {
+                    if (response.isSuccessful) {
+                        responseCallback(response.body())
+                    }
+                }
+            })
+    }
+
+    fun getTweet(id: Long, responseCallback: (Tweet) -> Unit) {
+        TwitterCore.getInstance().getApiClient(SessionUtils.twitterSession).statusesService.show(id, null, null, true)
+            .enqueue(object : Callback<Tweet> {
+                override fun onFailure(call: Call<Tweet>?, t: Throwable?) {
+                    //TODO: Handle error
+                }
+
+                override fun onResponse(call: Call<Tweet>?, response: Response<Tweet>) {
+                    if (response.isSuccessful) {
+                        responseCallback(response.body())
+                    }
+                }
+            })
     }
 
     fun favoriteTweet(id: Long, responseCallback: (Tweet) -> Unit) {
-        TwitterCore.getInstance().getApiClient(SessionUtils.twitterSession).favoriteService.create(id, false).enqueue(object : Callback<Tweet> {
-            override fun onFailure(call: Call<Tweet>?, t: Throwable?) {
-                //TODO: Handle error
-            }
-
-            override fun onResponse(call: Call<Tweet>?, response: Response<Tweet>) {
-                if (response.isSuccessful) {
-                    responseCallback(response.body())
+        TwitterCore.getInstance().getApiClient(SessionUtils.twitterSession).favoriteService.create(id, false)
+            .enqueue(object : Callback<Tweet> {
+                override fun onFailure(call: Call<Tweet>?, t: Throwable?) {
+                    //TODO: Handle error
                 }
-            }
-        })
+
+                override fun onResponse(call: Call<Tweet>?, response: Response<Tweet>) {
+                    if (response.isSuccessful) {
+                        responseCallback(response.body())
+                    }
+                }
+            })
     }
 
     fun retweet(id: Long, responseCallback: (Tweet) -> Unit) {
-        TwitterCore.getInstance().getApiClient(SessionUtils.twitterSession).statusesService.retweet(id, true).enqueue(object : Callback<Tweet> {
-            override fun onFailure(call: Call<Tweet>?, t: Throwable?) {
-                //TODO: Handle error
-            }
-
-            override fun onResponse(call: Call<Tweet>?, response: Response<Tweet>) {
-                if (response.isSuccessful) {
-                    responseCallback(response.body())
+        TwitterCore.getInstance().getApiClient(SessionUtils.twitterSession).statusesService.retweet(id, true)
+            .enqueue(object : Callback<Tweet> {
+                override fun onFailure(call: Call<Tweet>?, t: Throwable?) {
+                    //TODO: Handle error
                 }
-            }
-        })
+
+                override fun onResponse(call: Call<Tweet>?, response: Response<Tweet>) {
+                    if (response.isSuccessful) {
+                        responseCallback(response.body())
+                    }
+                }
+            })
     }
 
     fun getTweets(query: String, geocode: Geocode?, responseCallback: (List<Tweet>) -> Unit) {

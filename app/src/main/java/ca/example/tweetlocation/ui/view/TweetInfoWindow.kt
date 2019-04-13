@@ -12,7 +12,7 @@ class TweetInfoWindow(private val context: Context) : GoogleMap.InfoWindowAdapte
 
     override fun getInfoContents(marker: Marker?): View {
         val view = (context as Activity).layoutInflater.inflate(R.layout.view_map_tweet_info_window, null)
-        view.username.text = marker?.title
+        view.userScreenNameTextView.text = marker?.title
         view.content.text = marker?.snippet
         return view
     }

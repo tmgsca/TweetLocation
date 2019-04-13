@@ -26,7 +26,8 @@ import android.widget.MediaController
 import android.widget.SearchView
 import android.widget.Toast
 import ca.example.tweetlocation.R
-import ca.example.tweetlocation.data.*
+import ca.example.tweetlocation.data.SessionUtils
+import ca.example.tweetlocation.data.TweetRepository
 import ca.example.tweetlocation.model.MapsViewModel
 import ca.example.tweetlocation.model.MapsViewModelFactory
 import ca.example.tweetlocation.ui.adapter.TweetSearchAdapter
@@ -208,7 +209,6 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
                 dialog.mediaControllerLayout.addView(mediaController)
                 mediaController?.visibility = View.VISIBLE
                 mediaController?.setMediaPlayer(videoView)
-
                 videoView.start()
             }
         }
@@ -255,34 +255,8 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
     }
 
     private fun startTweetDetailActivity(tweet: Tweet) {
-        val detail = TweetDetail(
-            tweet.id,
-            tweet.user.name,
-            tweet.text,
-            tweet.user.screenName,
-            tweet.favoriteCount,
-            tweet.retweetCount,
-            tweet.user.profileImageUrl,
-            tweet.coordinates?.latitude,
-            tweet.coordinates?.longitude,
-            tweet.favorited,
-            tweet.retweeted,
-            tweet.createdAt,
-            tweet.extendedEntities.media.map {
-                TweetMedium(
-                    it.type,
-                    it.mediaUrlHttps,
-                    if (it.videoInfo != null) TweetVideo(
-                        it.videoInfo.variants.last().url,
-                        it.videoInfo.aspectRatio.first() / it.videoInfo.aspectRatio.last(),
-                        it.videoInfo.durationMillis,
-                        it.videoInfo.variants.first().contentType
-                    ) else null
-                )
-            }
-        )
         val intent = Intent(this, TweetDetailActivity::class.java)
-        intent.putExtra("tweetDetail", detail)
+        intent.putExtra("tweetId", tweet.id)
         startActivity(intent)
     }
 
