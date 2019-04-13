@@ -17,6 +17,12 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
     var latitude: Double? = null
     var longitude: Double? = null
 
+    private val loading: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>().also {
+            it.value = false
+        }
+    }
+
     private val searchTweets: MutableLiveData<List<Tweet>> by lazy {
         MutableLiveData<List<Tweet>>()
     }
@@ -26,13 +32,16 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
     }
 
     fun queryTweets(query: String) {
+        loading.value = true
         repository.getTweets(query) {
             searchTweets.value = it
+            loading.value = false
         }
     }
 
     fun queryTweets(query: String, location: Location) {
         val geocode = Geocode(location.latitude, location.longitude, DISTANCE, Geocode.Distance.KILOMETERS)
+        loading.value = true
         repository.getTweets(query, geocode) { results ->
             val filteredResults = results.filter { r -> r.coordinates != null }
             mapTweets.value?.let { currentTweets ->
@@ -47,12 +56,15 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
             } ?: run {
                 mapTweets.value = ArrayList(filteredResults).sortedBy { it.createdAt }
             }
+            loading.value = false
         }
     }
 
     fun clearSearch() {
         searchTweets.value = emptyList()
     }
+
+    fun getLoading() = loading as LiveData<Boolean>
 
     fun getSearchTweets() = searchTweets as LiveData<List<Tweet>>
 

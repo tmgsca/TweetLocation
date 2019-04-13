@@ -11,10 +11,10 @@
               tools:context=".ui.activity.MapsActivity"
               android:name="com.google.android.gms.maps.SupportMapFragment"/>
 
-
-    <SearchView android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="20dp"
-                android:layout_marginStart="16dp" android:layout_marginEnd="16dp"
+    <SearchView android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="60dp"
+                android:layout_marginStart="13dp" android:layout_marginEnd="13dp"
                 app:queryBackground="@android:color/transparent"
+                android:queryBackground="@android:color/transparent"
                 android:id="@+id/searchView"
                 android:elevation="3dp"
                 android:background="@android:color/white"/>
@@ -32,8 +32,17 @@
             android:paddingTop="48dp"
             android:paddingBottom="8dp"
             android:clipToPadding="false"
-            android:layout_marginEnd="16dp"
-            android:layout_marginStart="16dp"
+            android:layout_marginEnd="13dp"
+            android:layout_marginStart="13dp"
             android:layout_height="match_parent"/>
+
+
+    <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="visible" />
 
 </RelativeLayout>

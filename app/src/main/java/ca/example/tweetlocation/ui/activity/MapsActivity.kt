@@ -61,6 +61,13 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
             googleMap = it
             googleMap?.setInfoWindowAdapter(TweetInfoWindow(this))
             googleMap?.setOnInfoWindowClickListener(this)
+            // We won't request the permissions here because they're going to be requested elsewhere already.
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            )
+                googleMap?.isMyLocationEnabled = true
             setupObservers()
         }
     }
@@ -92,6 +99,7 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
                         Manifest.permission.ACCESS_FINE_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
+                    googleMap?.isMyLocationEnabled = true
                     locationManager?.requestLocationUpdates(
                         LocationManager.GPS_PROVIDER,
                         LOCATION_REQUEST_MIN_TIME,
@@ -145,37 +153,34 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
 
     // Private methods
 
+    private fun startMediaDetailActivity(medium: TweetMedium) {
+        Log.d(TAG, "startMediaDetailActivity")
+    }
+
     private fun setupSearchView() {
-
-        val adapter = TweetSearchAdapter {
-            startTweetDetailActivity(it)
-        }
-
+        val adapter = TweetSearchAdapter(onTweetClick = { startTweetDetailActivity(it) },
+            onMediaClick = { startMediaDetailActivity(it) })
         searchResultsRecyclerView.layoutManager = LinearLayoutManager(this).apply {
             orientation = LinearLayoutManager.VERTICAL
         }
-
         searchResultsRecyclerView.adapter = adapter
-
         viewModel.getSearchTweets().observe(this, Observer<List<Tweet>> {
             adapter.loadItems(it ?: emptyList())
             adapter.notifyDataSetChanged()
         })
-
         searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             searchResultsRecyclerView.visibility = if (hasFocus) View.VISIBLE else View.GONE
             searchBackgroundView.visibility = if (hasFocus) View.VISIBLE else View.GONE
             if (!hasFocus) viewModel.clearSearch()
         }
-
         searchView.setOnCloseListener {
             viewModel.clearSearch()
             false
         }
-
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 query?.let {
+                    viewModel.clearSearch()
                     viewModel.queryTweets(it)
                 } ?: viewModel.clearSearch()
                 return true
@@ -220,6 +225,11 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
     }
 
     private fun setupObservers() {
+        viewModel.getLoading().observe(this, Observer<Boolean> { loading ->
+            loading?.let {
+                progressBar.visibility = if (it) View.VISIBLE else View.GONE
+            }
+        })
         viewModel.getMapTweets().observe(this, Observer<List<Tweet>> { tweets ->
             tweets?.let {
                 addMarkers(it)
@@ -242,6 +252,7 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
             )
 
         } else {
+            googleMap?.isMyLocationEnabled = true
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
                 LOCATION_REQUEST_MIN_TIME,

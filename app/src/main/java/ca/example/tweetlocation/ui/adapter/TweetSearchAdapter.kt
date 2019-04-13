@@ -4,10 +4,11 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import ca.example.tweetlocation.R
+import ca.example.tweetlocation.data.TweetMedium
 import ca.example.tweetlocation.ui.view.TweetListItemViewHolder
 import com.twitter.sdk.android.core.models.Tweet
 
-class TweetSearchAdapter(val onClick: (Tweet) -> Unit) : RecyclerView.Adapter<TweetListItemViewHolder>() {
+class TweetSearchAdapter(val onTweetClick: (Tweet) -> Unit, val onMediaClick: (TweetMedium) -> Unit) : RecyclerView.Adapter<TweetListItemViewHolder>() {
 
     var items: List<Tweet> = emptyList()
 
@@ -25,7 +26,7 @@ class TweetSearchAdapter(val onClick: (Tweet) -> Unit) : RecyclerView.Adapter<Tw
 
 
     override fun onBindViewHolder(holder: TweetListItemViewHolder, position: Int) {
-        holder.tweet = items[position]
-        holder.view.setOnClickListener { onClick(items[position]) }
+        holder.bind(items[position], onMediaClick)
+        holder.view.setOnClickListener { onTweetClick(items[position]) }
     }
 }

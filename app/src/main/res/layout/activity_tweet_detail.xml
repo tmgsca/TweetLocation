@@ -8,20 +8,26 @@
         tools:context=".ui.activity.TweetDetailActivity">
 
 
-    <android.support.v7.widget.CardView android:layout_width="match_parent" android:layout_height="wrap_content" app:cardCornerRadius="2dp"
+    <android.support.v7.widget.CardView android:layout_width="match_parent" android:layout_height="wrap_content"
+                                        app:cardCornerRadius="2dp"
                                         app:cardUseCompatPadding="true"
                                         app:contentPadding="16dp"
                                         app:cardElevation="3dp">
 
         <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
 
-            <LinearLayout android:layout_width="match_parent" android:orientation="horizontal" android:layout_height="72dp" android:gravity="start" android:id="@+id/userContainerLinearLayout">
+            <LinearLayout android:layout_width="match_parent" android:orientation="horizontal"
+                          android:layout_height="72dp" android:gravity="start"
+                          android:id="@+id/userContainerLinearLayout">
 
-                <com.android.volley.toolbox.NetworkImageView android:layout_width="72dp" android:layout_height="72dp" android:id="@+id/photo"/>
+                <com.android.volley.toolbox.NetworkImageView android:layout_width="72dp" android:layout_height="72dp"
+                                                             android:id="@+id/photo"/>
 
-                <LinearLayout android:layout_width="wrap_content" android:layout_marginStart="8dp" android:layout_height="72dp" android:orientation="vertical">
+                <LinearLayout android:layout_width="match_parent" android:layout_marginStart="8dp"
+                              android:layout_height="72dp" android:orientation="vertical">
 
-                    <LinearLayout android:layout_width="match_parent" android:gravity="center_vertical" android:layout_height="wrap_content">
+                    <LinearLayout android:layout_width="match_parent" android:gravity="center_vertical"
+                                  android:layout_height="wrap_content">
 
                         <android.support.v7.widget.AppCompatTextView
                                 android:textSize="20sp"
@@ -37,60 +43,75 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:id="@+id/username"
-                                tools:text="\@username"/>
+                                tools:text="\@johndoe"/>
 
                     </LinearLayout>
 
-                    <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp">
-
-                        <android.support.v7.widget.AppCompatTextView tools:text="2019-01-01 00:00" android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/date"
-                                                                     android:layout_alignParentStart="true"/>
-                        <android.support.v7.widget.AppCompatTextView tools:text="-49.993 / 127.199" android:layout_width="wrap_content" android:layout_height="wrap_content"
-                                                                     android:layout_alignParentEnd="true"
-                                                                     android:id="@+id/coordinates"
-                                                                     android:gravity="end"
-                                                                     android:layout_toEndOf="@id/date"/>
-
-                    </RelativeLayout>
+                    <android.support.v7.widget.AppCompatTextView tools:text="2019-01-01 00:00"
+                                                                 android:layout_width="wrap_content"
+                                                                 android:layout_height="wrap_content"
+                                                                 android:id="@+id/date"
+                                                                 android:layout_alignParentStart="true"
+                                                                 android:layout_marginTop="2dp"/>
+                    <android.support.v7.widget.AppCompatTextView android:layout_marginTop="2dp"
+                                                                 tools:text="-49.993, 127.199"
+                                                                 android:layout_width="wrap_content"
+                                                                 android:layout_height="wrap_content"
+                                                                 android:layout_alignParentEnd="true"
+                                                                 android:id="@+id/coordinates"
+                                                                 android:gravity="end"
+                                                                 android:layout_toEndOf="@id/date"/>
 
                 </LinearLayout>
 
             </LinearLayout>
 
 
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_below="@id/userContainerLinearLayout" android:layout_marginTop="16dp"
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                          android:layout_below="@id/userContainerLinearLayout" android:layout_marginTop="16dp"
                           android:orientation="vertical">
 
-                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/actionButtonsContainer" android:layout_marginTop="8dp">
+                <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                              android:id="@+id/actionButtonsContainer" android:layout_marginTop="8dp">
 
-                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                  android:gravity="center_vertical" android:orientation="horizontal">
 
                         <ImageButton
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginEnd="4dp"
+                                android:tint="@color/colorPrimary"
                                 android:id="@+id/favoriteButton"
                                 android:src="@drawable/favorite_button_selector"
                                 android:background="?attr/selectableItemBackgroundBorderless"/>
 
-                        <android.support.v7.widget.AppCompatTextView android:textSize="16sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/favoriteCount"
+                        <android.support.v7.widget.AppCompatTextView android:textSize="16sp"
+                                                                     android:layout_width="wrap_content"
+                                                                     android:layout_height="wrap_content"
+                                                                     android:id="@+id/favoriteCount"
                                                                      tools:text="100"/>
 
                     </LinearLayout>
 
 
-                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginStart="16dp"
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                  android:gravity="center_vertical" android:layout_marginStart="16dp"
                                   android:orientation="horizontal">
 
                         <ImageButton
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:id="@+id/retweetButton"
+                                android:tint="@color/colorPrimary"
                                 android:src="@drawable/ic_twitter_retweet"
                                 android:background="?attr/selectableItemBackgroundBorderless"
                                 android:layout_marginEnd="4dp"/>
 
-                        <android.support.v7.widget.AppCompatTextView android:textSize="16sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/retweetCount"
+                        <android.support.v7.widget.AppCompatTextView android:textSize="16sp"
+                                                                     android:layout_width="wrap_content"
+                                                                     android:layout_height="wrap_content"
+                                                                     android:id="@+id/retweetCount"
                                                                      tools:text="100"/>
 
                     </LinearLayout>
@@ -98,7 +119,9 @@
 
                 </LinearLayout>
 
-                <android.support.v7.widget.AppCompatTextView android:layout_marginTop="8dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/text"
+                <android.support.v7.widget.AppCompatTextView android:layout_marginTop="8dp"
+                                                             android:layout_width="match_parent"
+                                                             android:layout_height="wrap_content" android:id="@+id/text"
                                                              android:textSize="18sp" android:lineSpacingExtra="3dp"
                                                              tools:text="@string/placeholder"/>
 
