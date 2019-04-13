@@ -58,7 +58,7 @@ class TweetDetailActivity : AppCompatActivity() {
         })
 
         viewModel.getUserScreenName().observe(this, Observer<String> {
-            userScreenNameTextView.text = it
+            userScreenNameTextView.text = getString(R.string.user_screen_name, it)
         })
 
         viewModel.getText().observe(this, Observer<String> {
@@ -94,7 +94,11 @@ class TweetDetailActivity : AppCompatActivity() {
         viewModel.isRetweeted().observe(this, Observer<Boolean> {
             it?.let { retweeted ->
                 retweetButton.isEnabled = !retweeted
-            } ?: run { retweetButton.isEnabled = false }
+                retweetButton.alpha = if (retweeted) 0.5F else 1F
+            } ?: run {
+                retweetButton.isEnabled = false
+                retweetButton.alpha = 0.5F
+            }
         })
 
         viewModel.isShowingImageDialog().observe(this, Observer<Boolean> { isShowingImageDialog ->

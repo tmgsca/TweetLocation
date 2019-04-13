@@ -20,9 +20,7 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
             createdAt.value = it.createdAt
             retweeted.value = it.retweeted
             favorited.value = it.favorited
-            favoriteCount.value = it.retweetedStatus?.let { rt ->
-                rt.favoriteCount
-            } ?: it.favoriteCount
+            favoriteCount.value = it.retweetedStatus?.favoriteCount ?: it.favoriteCount
             retweetCount.value = it.retweetCount
             coordinates.value = extractCoordinates(it)
             media.value = extractTweetMedia(it)
@@ -123,7 +121,7 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
 
     fun favorite() {
         repository.favoriteTweet(id) {
-            favoriteCount.value = it.favoriteCount
+            favoriteCount.value = it.retweetedStatus?.favoriteCount ?: it.favoriteCount
             favorited.value = it.favorited
         }
     }
