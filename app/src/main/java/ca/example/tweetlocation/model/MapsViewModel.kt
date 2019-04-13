@@ -16,6 +16,20 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
 
     var latitude: Double? = null
     var longitude: Double? = null
+    var videoDialogUrl: String? = null
+    var imageDialogUrl: String? = null
+
+    private val isShowingImageDialog: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>().also {
+            it.value = false
+        }
+    }
+
+    private val isShowingVideoDialog: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>().also {
+            it.value = false
+        }
+    }
 
     private val loading: MutableLiveData<Boolean> by lazy {
         MutableLiveData<Boolean>().also {
@@ -69,4 +83,28 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
     fun getSearchTweets() = searchTweets as LiveData<List<Tweet>>
 
     fun getMapTweets() = mapTweets as LiveData<List<Tweet>>
+
+    fun showVideoDialog(url: String) {
+        videoDialogUrl = url
+        isShowingVideoDialog.value = true
+    }
+
+    fun showImageDialog(url: String) {
+        imageDialogUrl = url
+        isShowingImageDialog.value = true
+    }
+
+    fun closeVideoDialog() {
+        isShowingVideoDialog.value = false
+        videoDialogUrl = null
+    }
+
+    fun closeImageDialog() {
+        isShowingImageDialog.value = false
+        imageDialogUrl = null
+    }
+
+    fun isShowingImageDialog() = isShowingImageDialog as LiveData<Boolean>
+
+    fun isShowingVideoDialog() = isShowingVideoDialog as LiveData<Boolean>
 }
