@@ -160,13 +160,13 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
         startActivity(intent)
     }
 
-    private fun showImageViewerDialog(url: String) {
+    private fun showImageDialog(url: String) {
         ImageViewDialog(this, url) {
             viewModel.closeImageDialog()
         }.show()
     }
 
-    private fun showVideoViewerDialog(url: String) {
+    private fun showVideoDialog(url: String) {
         VideoViewDialog(this, url) {
             viewModel.closeVideoDialog()
         }.show()
@@ -240,12 +240,12 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
         })
         viewModel.isShowingImageDialog().observe(this, Observer<Boolean> { isShowingImageDialog ->
             isShowingImageDialog?.let {
-                if (it) viewModel.imageDialogUrl?.let { url -> showImageViewerDialog(url) }
+                if (it) viewModel.imageDialogUrl?.let { url -> showImageDialog(url) }
             }
         })
         viewModel.isShowingVideoDialog().observe(this, Observer<Boolean> { isShowingVideoDialog ->
             isShowingVideoDialog?.let {
-                if (it) viewModel.videoDialogUrl?.let { url -> showVideoViewerDialog(url) }
+                if (it) viewModel.videoDialogUrl?.let { url -> showVideoDialog(url) }
             }
         })
     }

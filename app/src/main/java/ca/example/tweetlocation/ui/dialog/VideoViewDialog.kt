@@ -40,6 +40,7 @@ class VideoViewDialog(context: Context, url: String, onDismissListener: () -> Un
         }
         mediaController.show(0)
         videoView.setOnPreparedListener {
+            mediaController.show(0)
             videoPlayerProgressBar.visibility = View.GONE
         }
     }

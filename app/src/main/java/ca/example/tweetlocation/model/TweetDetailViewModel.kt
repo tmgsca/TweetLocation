@@ -20,7 +20,9 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
             createdAt.value = it.createdAt
             retweeted.value = it.retweeted
             favorited.value = it.favorited
-            favoriteCount.value = it.favoriteCount
+            favoriteCount.value = it.retweetedStatus?.let { rt ->
+                rt.favoriteCount
+            } ?: it.favoriteCount
             retweetCount.value = it.retweetCount
             coordinates.value = extractCoordinates(it)
             media.value = extractTweetMedia(it)
@@ -29,6 +31,21 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
     }
 
     // Properties
+
+    var videoDialogUrl: String? = null
+    var imageDialogUrl: String? = null
+
+    private val isShowingImageDialog: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>().also {
+            it.value = false
+        }
+    }
+
+    private val isShowingVideoDialog: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>().also {
+            it.value = false
+        }
+    }
 
     private val loading: MutableLiveData<Boolean> by lazy {
         MutableLiveData<Boolean>().apply { value = true }
@@ -80,6 +97,8 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
 
     // Accessors
 
+    fun isShowingImageDialog() = isShowingImageDialog as LiveData<Boolean>
+    fun isShowingVideoDialog() = isShowingVideoDialog as LiveData<Boolean>
     fun isLoading(): LiveData<Boolean> = loading
     fun getUserFullName(): LiveData<String> = userFullname
     fun getText(): LiveData<String> = text
@@ -93,7 +112,7 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
     fun getRetweetCount(): LiveData<Int> = retweetCount
     fun getMedia(): LiveData<List<TweetMedium>> = media
 
-    // Actions
+    // UI Actions
 
     fun retweet() {
         repository.retweet(id) {
@@ -114,6 +133,27 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
             favoriteCount.value = it.favoriteCount
             favorited.value = it.favorited
         }
+    }
+
+
+    fun showVideoDialog(url: String) {
+        videoDialogUrl = url
+        isShowingVideoDialog.value = true
+    }
+
+    fun showImageDialog(url: String) {
+        imageDialogUrl = url
+        isShowingImageDialog.value = true
+    }
+
+    fun closeVideoDialog() {
+        isShowingVideoDialog.value = false
+        videoDialogUrl = null
+    }
+
+    fun closeImageDialog() {
+        isShowingImageDialog.value = false
+        imageDialogUrl = null
     }
 
     // Helpers

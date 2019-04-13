@@ -4,12 +4,17 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.GridLayoutManager
 import android.view.View
 import ca.example.tweetlocation.R
 import ca.example.tweetlocation.data.SessionUtils
+import ca.example.tweetlocation.data.TweetMedium
 import ca.example.tweetlocation.data.TweetRepository
 import ca.example.tweetlocation.model.TweetDetailViewModel
 import ca.example.tweetlocation.model.TweetDetailViewModelFactory
+import ca.example.tweetlocation.ui.adapter.TweetMediaAdapter
+import ca.example.tweetlocation.ui.dialog.ImageViewDialog
+import ca.example.tweetlocation.ui.dialog.VideoViewDialog
 import ca.example.tweetlocation.util.VolleyUtils
 import kotlinx.android.synthetic.main.activity_tweet_detail.*
 
@@ -24,6 +29,18 @@ class TweetDetailActivity : AppCompatActivity() {
         setContentView(R.layout.activity_tweet_detail)
         setupObservers()
         setupActionListeners()
+        setupRecyclerView()
+    }
+
+    private fun setupViewModel() {
+        SessionUtils.twitterSession?.let {
+            if (intent.hasExtra("tweetId")) {
+                val repository = TweetRepository(it)
+                val tweetId = intent.getLongExtra("tweetId", -1)
+                val factory = TweetDetailViewModelFactory(tweetId, repository)
+                viewModel = ViewModelProviders.of(this, factory).get(TweetDetailViewModel::class.java)
+            }
+        }
     }
 
     private fun setupObservers() {
@@ -79,6 +96,17 @@ class TweetDetailActivity : AppCompatActivity() {
                 retweetButton.isEnabled = !retweeted
             } ?: run { retweetButton.isEnabled = false }
         })
+
+        viewModel.isShowingImageDialog().observe(this, Observer<Boolean> { isShowingImageDialog ->
+            isShowingImageDialog?.let {
+                if (it) viewModel.imageDialogUrl?.let { url -> showImageDialog(url) }
+            }
+        })
+        viewModel.isShowingVideoDialog().observe(this, Observer<Boolean> { isShowingVideoDialog ->
+            isShowingVideoDialog?.let {
+                if (it) viewModel.videoDialogUrl?.let { url -> showVideoDialog(url) }
+            }
+        })
     }
 
     private fun setupActionListeners() {
@@ -92,14 +120,33 @@ class TweetDetailActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupViewModel() {
-        SessionUtils.twitterSession?.let {
-            if (intent.hasExtra("tweetId")) {
-                val repository = TweetRepository(it)
-                val tweetId = intent.getLongExtra("tweetId", -1)
-                val factory = TweetDetailViewModelFactory(tweetId, repository)
-                viewModel = ViewModelProviders.of(this, factory).get(TweetDetailViewModel::class.java)
+    private fun setupRecyclerView() {
+        val adapter = TweetMediaAdapter {
+            if (it.type == "photo") viewModel.showImageDialog(it.url)
+            else it.video?.url?.let { url ->
+                viewModel.showVideoDialog(url)
             }
         }
+        mediaRecyclerView.layoutManager = GridLayoutManager(this, 6).apply {
+            orientation = GridLayoutManager.VERTICAL
+        }
+        mediaRecyclerView.adapter = adapter
+
+        viewModel.getMedia().observe(this, Observer<List<TweetMedium>> {
+            it?.let { media -> adapter.loadItems(media) }
+            adapter.notifyDataSetChanged()
+        })
+    }
+
+    private fun showImageDialog(url: String) {
+        ImageViewDialog(this, url) {
+            viewModel.closeImageDialog()
+        }.show()
+    }
+
+    private fun showVideoDialog(url: String) {
+        VideoViewDialog(this, url) {
+            viewModel.closeVideoDialog()
+        }.show()
     }
 }
