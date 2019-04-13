@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
                 android:animateLayoutChanges="true"
                 android:layout_height="match_parent" android:layout_width="match_parent">
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
@@ -11,24 +12,28 @@
               android:name="com.google.android.gms.maps.SupportMapFragment"/>
 
 
-    <SearchView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp"
+    <SearchView android:layout_width="match_parent" android:layout_height="48dp" android:layout_marginTop="20dp"
                 android:layout_marginStart="16dp" android:layout_marginEnd="16dp"
+                app:queryBackground="@android:color/transparent"
                 android:id="@+id/searchView"
                 android:elevation="3dp"
                 android:background="@android:color/white"/>
 
     <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent"
                  android:visibility="invisible"
-                 android:background="@android:color/darker_gray"
+                 android:background="#99F7F7F7"
                  android:id="@+id/searchBackgroundView"/>
 
     <android.support.v7.widget.RecyclerView
             android:visibility="invisible"
             android:id="@+id/searchResultsRecyclerView"
             android:layout_width="match_parent"
-            android:layout_below="@id/searchView"
-            android:paddingTop="16dp"
+            android:layout_alignTop="@id/searchView"
+            android:paddingTop="48dp"
+            android:paddingBottom="8dp"
             android:clipToPadding="false"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
             android:layout_height="match_parent"/>
 
 </RelativeLayout>

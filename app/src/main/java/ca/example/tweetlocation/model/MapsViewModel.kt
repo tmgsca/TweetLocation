@@ -50,6 +50,10 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
         }
     }
 
+    fun clearSearch() {
+        searchTweets.value = emptyList()
+    }
+
     fun getSearchTweets() = searchTweets as LiveData<List<Tweet>>
 
     fun getMapTweets() = mapTweets as LiveData<List<Tweet>>

@@ -11,8 +11,8 @@ data class TweetDetail(
     val favoriteCount: Int,
     val retweetCount: Int,
     val userPhotoUrl: String,
-    val latitude: Double,
-    val longitude: Double,
+    val latitude: Double?,
+    val longitude: Double?,
     val favorited: Boolean,
     val retweeted: Boolean,
     val createdAt: String,
@@ -27,8 +27,8 @@ data class TweetDetail(
         parcel.readInt(),
         parcel.readInt(),
         parcel.readString(),
-        parcel.readDouble(),
-        parcel.readDouble(),
+        parcel.readValue(Double::class.java.classLoader) as? Double,
+        parcel.readValue(Double::class.java.classLoader) as? Double,
         parcel.readByte() != 0.toByte(),
         parcel.readByte() != 0.toByte(),
         parcel.readString(),
@@ -44,8 +44,8 @@ data class TweetDetail(
         parcel.writeInt(favoriteCount)
         parcel.writeInt(retweetCount)
         parcel.writeString(userPhotoUrl)
-        parcel.writeDouble(latitude)
-        parcel.writeDouble(longitude)
+        parcel.writeValue(latitude)
+        parcel.writeValue(longitude)
         parcel.writeByte(if (favorited) 1 else 0)
         parcel.writeByte(if (retweeted) 1 else 0)
         parcel.writeString(createdAt)

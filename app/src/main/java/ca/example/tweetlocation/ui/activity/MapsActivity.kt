@@ -13,6 +13,7 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.View
 import android.widget.SearchView
@@ -24,6 +25,7 @@ import ca.example.tweetlocation.data.TweetMedium
 import ca.example.tweetlocation.data.TweetRepository
 import ca.example.tweetlocation.model.MapsViewModel
 import ca.example.tweetlocation.model.MapsViewModelFactory
+import ca.example.tweetlocation.ui.adapter.TweetSearchAdapter
 import ca.example.tweetlocation.ui.view.TweetInfoWindow
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -145,16 +147,37 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
 
     private fun setupSearchView() {
 
-        searchView.setOnQueryTextFocusChangeListener { view, hasFocus ->
+        val adapter = TweetSearchAdapter {
+            startTweetDetailActivity(it)
+        }
+
+        searchResultsRecyclerView.layoutManager = LinearLayoutManager(this).apply {
+            orientation = LinearLayoutManager.VERTICAL
+        }
+
+        searchResultsRecyclerView.adapter = adapter
+
+        viewModel.getSearchTweets().observe(this, Observer<List<Tweet>> {
+            adapter.loadItems(it ?: emptyList())
+            adapter.notifyDataSetChanged()
+        })
+
+        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             searchResultsRecyclerView.visibility = if (hasFocus) View.VISIBLE else View.GONE
             searchBackgroundView.visibility = if (hasFocus) View.VISIBLE else View.GONE
+            if (!hasFocus) viewModel.clearSearch()
+        }
+
+        searchView.setOnCloseListener {
+            viewModel.clearSearch()
+            false
         }
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 query?.let {
                     viewModel.queryTweets(it)
-                }
+                } ?: viewModel.clearSearch()
                 return true
             }
 
@@ -173,8 +196,8 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
             tweet.favoriteCount,
             tweet.retweetCount,
             tweet.user.profileImageUrl,
-            tweet.coordinates.latitude,
-            tweet.coordinates.longitude,
+            tweet.coordinates?.latitude,
+            tweet.coordinates?.longitude,
             tweet.favorited,
             tweet.retweeted,
             tweet.createdAt,
