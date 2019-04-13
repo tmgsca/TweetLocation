@@ -14,9 +14,14 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.View
+import android.widget.SearchView
 import android.widget.Toast
 import ca.example.tweetlocation.R
-import ca.example.tweetlocation.data.*
+import ca.example.tweetlocation.data.SessionUtils
+import ca.example.tweetlocation.data.TweetDetail
+import ca.example.tweetlocation.data.TweetMedium
+import ca.example.tweetlocation.data.TweetRepository
 import ca.example.tweetlocation.model.MapsViewModel
 import ca.example.tweetlocation.model.MapsViewModelFactory
 import ca.example.tweetlocation.ui.view.TweetInfoWindow
@@ -48,22 +53,13 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
         super.onCreate(savedInstanceState)
         setupViewModel()
         setContentView(R.layout.activity_maps)
+        setupSearchView()
+        supportActionBar?.hide()
         (map as SupportMapFragment).getMapAsync {
             googleMap = it
             googleMap?.setInfoWindowAdapter(TweetInfoWindow(this))
             googleMap?.setOnInfoWindowClickListener(this)
             setupObservers()
-        }
-    }
-
-    private fun moveCameraToLocation() {
-        googleMap?.let { m ->
-            viewModel.latitude?.let { latitude ->
-                viewModel.longitude?.let { longitude ->
-                    val position = LatLng(latitude, longitude)
-                    m.moveCamera(CameraUpdateFactory.newLatLng(position))
-                }
-            }
         }
     }
 
@@ -83,27 +79,6 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
         startTweetDetailActivity(marker?.tag as Tweet)
     }
 
-    private fun startTweetDetailActivity(tweet: Tweet) {
-        val detail = TweetDetail(
-            tweet.id,
-            tweet.user.name,
-            tweet.text,
-            tweet.user.screenName,
-            tweet.favoriteCount,
-            tweet.retweetCount,
-            tweet.user.profileImageUrl,
-            tweet.coordinates.latitude,
-            tweet.coordinates.longitude,
-            tweet.favorited,
-            tweet.retweeted,
-            tweet.createdAt,
-            tweet.extendedEntities.media.map { TweetMedium(it.type, it.mediaUrlHttps) }
-        )
-        val intent = Intent(this, TweetDetailActivity::class.java)
-        intent.putExtra("tweetDetail", detail)
-        startActivity(intent)
-    }
-
     // PermissionsResult listener
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -115,10 +90,19 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
                         Manifest.permission.ACCESS_FINE_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
-                    locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REQUEST_MIN_TIME, LOCATION_REQUEST_MIN_DISTANCE, this)
+                    locationManager?.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER,
+                        LOCATION_REQUEST_MIN_TIME,
+                        LOCATION_REQUEST_MIN_DISTANCE,
+                        this
+                    )
                 }
             } else if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(
+                        this,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+                ) {
                     ActivityCompat.requestPermissions(
                         this,
                         arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -159,6 +143,59 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
 
     // Private methods
 
+    private fun setupSearchView() {
+
+        searchView.setOnQueryTextFocusChangeListener { view, hasFocus ->
+            searchResultsRecyclerView.visibility = if (hasFocus) View.VISIBLE else View.GONE
+            searchBackgroundView.visibility = if (hasFocus) View.VISIBLE else View.GONE
+        }
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                query?.let {
+                    viewModel.queryTweets(it)
+                }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                return true
+            }
+        })
+    }
+
+    private fun startTweetDetailActivity(tweet: Tweet) {
+        val detail = TweetDetail(
+            tweet.id,
+            tweet.user.name,
+            tweet.text,
+            tweet.user.screenName,
+            tweet.favoriteCount,
+            tweet.retweetCount,
+            tweet.user.profileImageUrl,
+            tweet.coordinates.latitude,
+            tweet.coordinates.longitude,
+            tweet.favorited,
+            tweet.retweeted,
+            tweet.createdAt,
+            tweet.extendedEntities.media.map { TweetMedium(it.type, it.mediaUrlHttps) }
+        )
+        val intent = Intent(this, TweetDetailActivity::class.java)
+        intent.putExtra("tweetDetail", detail)
+        startActivity(intent)
+    }
+
+    private fun moveCameraToLocation() {
+        googleMap?.let { m ->
+            viewModel.latitude?.let { latitude ->
+                viewModel.longitude?.let { longitude ->
+                    val position = LatLng(latitude, longitude)
+                    m.moveCamera(CameraUpdateFactory.newLatLng(position))
+                }
+            }
+        }
+    }
+
     private fun setupObservers() {
         viewModel.getMapTweets().observe(this, Observer<List<Tweet>> { tweets ->
             tweets?.let {
@@ -182,7 +219,12 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
             )
 
         } else {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REQUEST_MIN_TIME, LOCATION_REQUEST_MIN_DISTANCE, this)
+            locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                LOCATION_REQUEST_MIN_TIME,
+                LOCATION_REQUEST_MIN_DISTANCE,
+                this
+            )
         }
     }
 
@@ -191,7 +233,8 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
         tweets
             .filter { it.coordinates != null }
             .forEach {
-                val options = MarkerOptions().position(LatLng(it.coordinates.latitude, it.coordinates.longitude)).title("@${it.user.screenName}").snippet(it.text)
+                val options = MarkerOptions().position(LatLng(it.coordinates.latitude, it.coordinates.longitude))
+                    .title("@${it.user.screenName}").snippet(it.text)
                 val marker = googleMap?.addMarker(options)
                 marker?.tag = it
             }
