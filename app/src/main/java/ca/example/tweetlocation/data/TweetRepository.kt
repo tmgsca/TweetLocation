@@ -11,13 +11,46 @@ import retrofit2.Response
 
 class TweetRepository(private val session: TwitterSession) {
 
-    fun addTweetToFavorites(tweet: Tweet) {
-        //TODO: Implement
+    fun unfavoriteTweet(id: Long, responseCallback: (Tweet) -> Unit) {
+        TwitterCore.getInstance().getApiClient(SessionUtils.twitterSession).favoriteService.destroy(id, false).enqueue(object : Callback<Tweet> {
+            override fun onFailure(call: Call<Tweet>?, t: Throwable?) {
+                //TODO: Handle error
+            }
+
+            override fun onResponse(call: Call<Tweet>?, response: Response<Tweet>) {
+                if (response.isSuccessful) {
+                    responseCallback(response.body())
+                }
+            }
+        })
     }
 
+    fun favoriteTweet(id: Long, responseCallback: (Tweet) -> Unit) {
+        TwitterCore.getInstance().getApiClient(SessionUtils.twitterSession).favoriteService.create(id, false).enqueue(object : Callback<Tweet> {
+            override fun onFailure(call: Call<Tweet>?, t: Throwable?) {
+                //TODO: Handle error
+            }
 
-    fun retweet(tweet: Tweet) {
-        //TODO: Implement
+            override fun onResponse(call: Call<Tweet>?, response: Response<Tweet>) {
+                if (response.isSuccessful) {
+                    responseCallback(response.body())
+                }
+            }
+        })
+    }
+
+    fun retweet(id: Long, responseCallback: (Tweet) -> Unit) {
+        TwitterCore.getInstance().getApiClient(SessionUtils.twitterSession).statusesService.retweet(id, true).enqueue(object : Callback<Tweet> {
+            override fun onFailure(call: Call<Tweet>?, t: Throwable?) {
+                //TODO: Handle error
+            }
+
+            override fun onResponse(call: Call<Tweet>?, response: Response<Tweet>) {
+                if (response.isSuccessful) {
+                    responseCallback(response.body())
+                }
+            }
+        })
     }
 
     fun getTweets(query: String, geocode: Geocode?, responseCallback: (List<Tweet>) -> Unit) {
@@ -37,9 +70,10 @@ class TweetRepository(private val session: TwitterSession) {
                 //TODO: Handle error
             }
 
-            override fun onResponse(call: Call<Search>?, response: Response<Search>?) {
-                val tweets = response?.body()?.tweets?.let { it } ?: emptyList<Tweet>()
-                responseCallback(tweets)
+            override fun onResponse(call: Call<Search>?, response: Response<Search>) {
+                if (response.isSuccessful) {
+                    responseCallback(response.body().tweets)
+                }
             }
         })
     }

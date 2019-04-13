@@ -44,4 +44,8 @@ dependencies {
     // I decided to use the older version that worked.
     implementation 'com.twitter.sdk.android:twitter-core:3.1.1'
     implementation 'com.android.volley:volley:1.1.1'
+
+    // Volley is pretty much overkill for image loading only unless you are working with super hi-res images.
+    // I chose Picasso for this task as it is trivial to integrate and super performant.
+    // implementation 'com.squareup.picasso:picasso:2.71828'
 }

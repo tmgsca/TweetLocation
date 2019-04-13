@@ -7,4 +7,8 @@
         bsCrSiZsPR2c0sD27UM1BBqGFqryNtVfdFBobSg4hjUx3sVb1V
     </string>
     <string name="twitter_login_failed">Twitter login failed</string>
+    <string name="detail">Detail</string>
+    <string name="placeholder">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean at risus massa. Vivamus turpis nisi, congue et laoreet non, elementum vitae massa. Integer sit amet nunc vitae odio semper posuere vitae aliquet turpis. Integer molestie lacinia diam in consequat. Phasellus volutpat. </string>
+    <string name="favorite">Favorite</string>
+    <string name="retweet">Retweet</string>
 </resources>

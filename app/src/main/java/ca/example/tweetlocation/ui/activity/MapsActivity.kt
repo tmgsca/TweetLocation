@@ -4,6 +4,7 @@ import android.Manifest
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
@@ -15,19 +16,20 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
 import ca.example.tweetlocation.R
-import ca.example.tweetlocation.data.SessionUtils
-import ca.example.tweetlocation.data.TweetRepository
+import ca.example.tweetlocation.data.*
 import ca.example.tweetlocation.model.MapsViewModel
 import ca.example.tweetlocation.model.MapsViewModelFactory
+import ca.example.tweetlocation.ui.view.TweetInfoWindow
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.twitter.sdk.android.core.models.Tweet
 import kotlinx.android.synthetic.main.activity_maps.*
 
-class MapsActivity : AppCompatActivity(), LocationListener {
+class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWindowClickListener {
 
     companion object {
         private const val TAG = "MapsActivity"
@@ -37,9 +39,8 @@ class MapsActivity : AppCompatActivity(), LocationListener {
     }
 
     private var googleMap: GoogleMap? = null
-    private lateinit var locationManager: LocationManager
+    private var locationManager: LocationManager? = null
     private lateinit var viewModel: MapsViewModel
-    private var location: Location? = null
 
     // Lifecycle methods
 
@@ -49,28 +50,58 @@ class MapsActivity : AppCompatActivity(), LocationListener {
         setContentView(R.layout.activity_maps)
         (map as SupportMapFragment).getMapAsync {
             googleMap = it
-            moveCameraToCurrentLocation()
+            googleMap?.setInfoWindowAdapter(TweetInfoWindow(this))
+            googleMap?.setOnInfoWindowClickListener(this)
             setupObservers()
         }
     }
 
-    private fun moveCameraToCurrentLocation() {
+    private fun moveCameraToLocation() {
         googleMap?.let { m ->
-            location?.let { l ->
-                val position = LatLng(l.latitude, l.longitude)
-                m.moveCamera(CameraUpdateFactory.newLatLng(position))
+            viewModel.latitude?.let { latitude ->
+                viewModel.longitude?.let { longitude ->
+                    val position = LatLng(latitude, longitude)
+                    m.moveCamera(CameraUpdateFactory.newLatLng(position))
+                }
             }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        locationManager.removeUpdates(this)
+        locationManager?.removeUpdates(this)
     }
 
     override fun onStart() {
         super.onStart()
         setupLocationListener()
+    }
+
+    // Map InfoWindow click listener
+
+    override fun onInfoWindowClick(marker: Marker?) {
+        startTweetDetailActivity(marker?.tag as Tweet)
+    }
+
+    private fun startTweetDetailActivity(tweet: Tweet) {
+        val detail = TweetDetail(
+            tweet.id,
+            tweet.user.name,
+            tweet.text,
+            tweet.user.screenName,
+            tweet.favoriteCount,
+            tweet.retweetCount,
+            tweet.user.profileImageUrl,
+            tweet.coordinates.latitude,
+            tweet.coordinates.longitude,
+            tweet.favorited,
+            tweet.retweeted,
+            tweet.createdAt,
+            tweet.extendedEntities.media.map { TweetMedium(it.type, it.mediaUrlHttps) }
+        )
+        val intent = Intent(this, TweetDetailActivity::class.java)
+        intent.putExtra("tweetDetail", detail)
+        startActivity(intent)
     }
 
     // PermissionsResult listener
@@ -84,7 +115,7 @@ class MapsActivity : AppCompatActivity(), LocationListener {
                         Manifest.permission.ACCESS_FINE_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED
                 ) {
-                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REQUEST_MIN_TIME, LOCATION_REQUEST_MIN_DISTANCE, this)
+                    locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER, LOCATION_REQUEST_MIN_TIME, LOCATION_REQUEST_MIN_DISTANCE, this)
                 }
             } else if (grantResults[0] == PackageManager.PERMISSION_DENIED) {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -101,10 +132,16 @@ class MapsActivity : AppCompatActivity(), LocationListener {
     // LocationListener methods
 
     override fun onLocationChanged(location: Location?) {
-        this.location = location
-        moveCameraToCurrentLocation()
-        this.location?.let {
-            viewModel.queryTweets("", it)
+        location?.let {
+            if (viewModel.latitude == null && viewModel.longitude == null) {
+                viewModel.latitude = it.latitude
+                viewModel.longitude = it.longitude
+                viewModel.queryTweets(" ", it)
+                moveCameraToLocation()
+            } else {
+                viewModel.latitude = it.latitude
+                viewModel.longitude = it.longitude
+            }
         }
     }
 
@@ -153,8 +190,11 @@ class MapsActivity : AppCompatActivity(), LocationListener {
         googleMap?.clear()
         tweets
             .filter { it.coordinates != null }
-            .map { MarkerOptions().position(LatLng(it.coordinates.latitude, it.coordinates.longitude)).title(it.user.name) }
-            .forEach { googleMap?.addMarker(it) }
+            .forEach {
+                val options = MarkerOptions().position(LatLng(it.coordinates.latitude, it.coordinates.longitude)).title("@${it.user.screenName}").snippet(it.text)
+                val marker = googleMap?.addMarker(options)
+                marker?.tag = it
+            }
     }
 
     private fun setupViewModel() {

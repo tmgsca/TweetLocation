@@ -11,8 +11,11 @@ import com.twitter.sdk.android.core.services.params.Geocode
 class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
 
     companion object {
-        private const val DISTANCE = 100
+        private const val DISTANCE = 10
     }
+
+    var latitude: Double? = null
+    var longitude: Double? = null
 
     private val searchTweets: MutableLiveData<List<Tweet>> by lazy {
         MutableLiveData<List<Tweet>>()
