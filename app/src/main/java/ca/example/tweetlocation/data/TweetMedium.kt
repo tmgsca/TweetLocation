@@ -3,16 +3,18 @@ package ca.example.tweetlocation.data
 import android.os.Parcel
 import android.os.Parcelable
 
-data class TweetMedium(val type: String, val url: String) : Parcelable {
+data class TweetMedium(val type: String, val url: String, val video: TweetVideo?) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString(),
-        parcel.readString()
+        parcel.readString(),
+        parcel.readParcelable(TweetVideo::class.java.classLoader)
     ) {
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(type)
         parcel.writeString(url)
+        parcel.writeParcelable(video, flags)
     }
 
     override fun describeContents(): Int {

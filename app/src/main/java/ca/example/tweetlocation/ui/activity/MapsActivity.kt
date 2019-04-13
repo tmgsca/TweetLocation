@@ -1,6 +1,7 @@
 package ca.example.tweetlocation.ui.activity
 
 import android.Manifest
+import android.app.Dialog
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
@@ -9,6 +10,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
@@ -16,13 +18,14 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
+import android.view.Window
+import android.view.WindowManager.LayoutParams
+import android.widget.MediaController
 import android.widget.SearchView
 import android.widget.Toast
 import ca.example.tweetlocation.R
-import ca.example.tweetlocation.data.SessionUtils
-import ca.example.tweetlocation.data.TweetDetail
-import ca.example.tweetlocation.data.TweetMedium
-import ca.example.tweetlocation.data.TweetRepository
+import ca.example.tweetlocation.data.*
 import ca.example.tweetlocation.model.MapsViewModel
 import ca.example.tweetlocation.model.MapsViewModelFactory
 import ca.example.tweetlocation.ui.adapter.TweetSearchAdapter
@@ -35,6 +38,9 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.twitter.sdk.android.core.models.Tweet
 import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.android.synthetic.main.view_video.*
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 
 class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWindowClickListener {
 
@@ -47,6 +53,7 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
 
     private var googleMap: GoogleMap? = null
     private var locationManager: LocationManager? = null
+    private var mediaController: MediaController? = null
     private lateinit var viewModel: MapsViewModel
 
     // Lifecycle methods
@@ -153,13 +160,49 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
 
     // Private methods
 
-    private fun startMediaDetailActivity(medium: TweetMedium) {
-        Log.d(TAG, "startMediaDetailActivity")
+    private fun startMediaDetailDialog(medium: TweetMedium) {
+        if (medium.type == "video") {
+            showMediaPlayerDialog(medium)
+        } else {
+
+        }
+    }
+
+    private fun showMediaPlayerDialog(medium: TweetMedium) {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.view_video)
+        dialog.show()
+        val layoutParams = LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.WRAP_CONTENT
+        )
+        layoutParams.copyFrom(dialog.window?.attributes)
+        dialog.window?.attributes = layoutParams
+        val videoView = dialog.videoView
+        val uri = Uri.parse(medium.video?.url)
+        videoView.setOnPreparedListener {
+            it.setOnVideoSizeChangedListener { _, _, _ ->
+                mediaController?.show(0)
+            }
+        }
+        doAsync {
+            videoView.setVideoURI(uri)
+            uiThread {
+                mediaController = MediaController(it)
+                mediaController?.setAnchorView(videoView)
+                (mediaController?.parent as ViewGroup).removeView(mediaController)
+                dialog.mediaControllerLayout.addView(mediaController)
+                mediaController?.visibility = View.VISIBLE
+                mediaController?.setMediaPlayer(videoView)
+                videoView.start()
+            }
+        }
     }
 
     private fun setupSearchView() {
         val adapter = TweetSearchAdapter(onTweetClick = { startTweetDetailActivity(it) },
-            onMediaClick = { startMediaDetailActivity(it) })
+            onMediaClick = { startMediaDetailDialog(it) })
         searchResultsRecyclerView.layoutManager = LinearLayoutManager(this).apply {
             orientation = LinearLayoutManager.VERTICAL
         }
@@ -206,7 +249,18 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
             tweet.favorited,
             tweet.retweeted,
             tweet.createdAt,
-            tweet.extendedEntities.media.map { TweetMedium(it.type, it.mediaUrlHttps) }
+            tweet.extendedEntities.media.map {
+                TweetMedium(
+                    it.type,
+                    it.mediaUrlHttps,
+                    if (it.videoInfo != null) TweetVideo(
+                        it.videoInfo.variants.last().url,
+                        it.videoInfo.aspectRatio.first() / it.videoInfo.aspectRatio.last(),
+                        it.videoInfo.durationMillis,
+                        it.videoInfo.variants.first().contentType
+                    ) else null
+                )
+            }
         )
         val intent = Intent(this, TweetDetailActivity::class.java)
         intent.putExtra("tweetDetail", detail)

@@ -5,6 +5,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
 import ca.example.tweetlocation.data.TweetMedium
+import ca.example.tweetlocation.data.TweetVideo
 import ca.example.tweetlocation.ui.adapter.TweetMediaAdapter
 import ca.example.tweetlocation.util.VolleyUtils
 import com.twitter.sdk.android.core.models.Tweet
@@ -15,7 +16,19 @@ class TweetListItemViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
     fun bind(tweet: Tweet, onClick: (TweetMedium) -> Unit) {
         this.tweet = tweet
         val adapter = TweetMediaAdapter(onClick = { onClick(it) })
-        adapter.loadItems(tweet.extendedEntities?.media?.map { TweetMedium(it.type, it.mediaUrlHttps) }
+
+        adapter.loadItems(tweet.extendedEntities?.media?.map {
+            TweetMedium(
+                it.type,
+                it.mediaUrlHttps,
+                if (it.videoInfo != null) TweetVideo(
+                    it.videoInfo.variants.last().url,
+                    it.videoInfo.aspectRatio.first() / it.videoInfo.aspectRatio.last(),
+                    it.videoInfo.durationMillis,
+                    it.videoInfo.variants.first().contentType
+                ) else null
+            )
+        }
             ?: emptyList())
         view.mediaRecyclerView.layoutManager = GridLayoutManager(view.context, 3).apply {
             orientation = LinearLayoutManager.VERTICAL
