@@ -4,6 +4,7 @@ import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.View
+import ca.example.tweetlocation.R
 import ca.example.tweetlocation.data.TweetMedium
 import ca.example.tweetlocation.data.TweetVideo
 import ca.example.tweetlocation.ui.adapter.TweetMediaAdapter
@@ -38,9 +39,10 @@ class TweetListItemViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
         set(value) {
             field = value
             view.photoImageView.setImageUrl(tweet?.user?.profileImageUrl, VolleyUtils.imageLoader)
-            view.tweetTextView.text = tweet?.text
+            view.textTextView.text = tweet?.text
             view.userNameTextView.text = tweet?.user?.name
-            view.userScreenNameTextView.text = "@${tweet?.user?.screenName}"
-            view.dateTextView.text = tweet?.createdAt
+            view.userScreenNameTextView.text =
+                view.context.getString(R.string.user_screen_name, tweet?.user?.screenName)
+            view.createdAtTextView.text = tweet?.createdAt
         }
 }

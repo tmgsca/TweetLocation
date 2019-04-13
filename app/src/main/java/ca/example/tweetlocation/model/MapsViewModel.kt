@@ -14,6 +14,8 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
         private const val DISTANCE = 10
     }
 
+    // Properties
+
     var latitude: Double? = null
     var longitude: Double? = null
     var videoDialogUrl: String? = null
@@ -45,6 +47,8 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
         MutableLiveData<List<Tweet>>()
     }
 
+    // Queries
+
     fun queryTweets(query: String) {
         loading.value = true
         repository.getTweets(query) {
@@ -74,15 +78,11 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
         }
     }
 
+    // UI Actions
+
     fun clearSearch() {
         searchTweets.value = emptyList()
     }
-
-    fun getLoading() = loading as LiveData<Boolean>
-
-    fun getSearchTweets() = searchTweets as LiveData<List<Tweet>>
-
-    fun getMapTweets() = mapTweets as LiveData<List<Tweet>>
 
     fun showVideoDialog(url: String) {
         videoDialogUrl = url
@@ -104,7 +104,11 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
         imageDialogUrl = null
     }
 
-    fun isShowingImageDialog() = isShowingImageDialog as LiveData<Boolean>
+    // Accessors
 
+    fun getLoading() = loading as LiveData<Boolean>
+    fun getSearchTweets() = searchTweets as LiveData<List<Tweet>>
+    fun getMapTweets() = mapTweets as LiveData<List<Tweet>>
+    fun isShowingImageDialog() = isShowingImageDialog as LiveData<Boolean>
     fun isShowingVideoDialog() = isShowingVideoDialog as LiveData<Boolean>
 }

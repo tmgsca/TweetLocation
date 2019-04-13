@@ -1,7 +1,6 @@
 package ca.example.tweetlocation.ui.activity
 
 import android.Manifest
-import android.app.Dialog
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
@@ -10,7 +9,6 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
@@ -18,11 +16,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
-import android.view.Window
-import android.view.WindowManager.LayoutParams
 import android.view.inputmethod.EditorInfo
-import android.widget.MediaController
 import android.widget.SearchView
 import android.widget.Toast
 import ca.example.tweetlocation.R
@@ -31,8 +25,9 @@ import ca.example.tweetlocation.data.TweetRepository
 import ca.example.tweetlocation.model.MapsViewModel
 import ca.example.tweetlocation.model.MapsViewModelFactory
 import ca.example.tweetlocation.ui.adapter.TweetSearchAdapter
+import ca.example.tweetlocation.ui.dialog.ImageViewDialog
+import ca.example.tweetlocation.ui.dialog.VideoViewDialog
 import ca.example.tweetlocation.ui.view.TweetInfoWindow
-import ca.example.tweetlocation.util.VolleyUtils
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
@@ -41,10 +36,6 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.twitter.sdk.android.core.models.Tweet
 import kotlinx.android.synthetic.main.activity_maps.*
-import kotlinx.android.synthetic.main.dialog_image_viewer.*
-import kotlinx.android.synthetic.main.dialog_video_player.*
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
 
 class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWindowClickListener {
 
@@ -57,7 +48,6 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
 
     private var googleMap: GoogleMap? = null
     private var locationManager: LocationManager? = null
-    private var mediaController: MediaController? = null
     private lateinit var viewModel: MapsViewModel
 
     // Lifecycle methods
@@ -162,65 +152,37 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
         Log.d(TAG, "onProviderDisabled: $provider")
     }
 
-    // Private methods
+    // View trigger
+
+    private fun startTweetDetailActivity(tweet: Tweet) {
+        val intent = Intent(this, TweetDetailActivity::class.java)
+        intent.putExtra("tweetId", tweet.id)
+        startActivity(intent)
+    }
 
     private fun showImageViewerDialog(url: String) {
-        val dialog = Dialog(this)
-        dialog.setOnDismissListener { viewModel.closeImageDialog() }
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setContentView(R.layout.dialog_image_viewer)
-        dialog.show()
-        val layoutParams = LayoutParams(
-            LayoutParams.WRAP_CONTENT,
-            LayoutParams.WRAP_CONTENT
-        )
-        layoutParams.copyFrom(dialog.window?.attributes)
-        dialog.window?.attributes = layoutParams
-        dialog.imageView.setImageUrl(url, VolleyUtils.imageLoader)
+        ImageViewDialog(this, url) {
+            viewModel.closeImageDialog()
+        }.show()
     }
 
     private fun showVideoViewerDialog(url: String) {
-        val dialog = Dialog(this)
-        dialog.setOnDismissListener { viewModel.closeVideoDialog() }
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setContentView(R.layout.dialog_video_player)
-        dialog.show()
-        val layoutParams = LayoutParams(
-            LayoutParams.WRAP_CONTENT,
-            LayoutParams.WRAP_CONTENT
-        )
-        layoutParams.copyFrom(dialog.window?.attributes)
-        dialog.window?.attributes = layoutParams
-        val videoView = dialog.videoView
-        val uri = Uri.parse(url)
-        videoView.setOnPreparedListener {
-            it.setOnVideoSizeChangedListener { _, _, _ ->
-                mediaController?.show(0)
-                dialog.videoPlayerProgressBar.visibility = View.GONE
-            }
-        }
-        dialog.videoPlayerProgressBar.visibility = View.VISIBLE
-        doAsync {
-            videoView.setVideoURI(uri)
-            uiThread {
-                mediaController = MediaController(it)
-                mediaController?.setAnchorView(videoView)
-                (mediaController?.parent as ViewGroup).removeView(mediaController)
-                dialog.mediaControllerLayout.addView(mediaController)
-                mediaController?.visibility = View.VISIBLE
-                mediaController?.setMediaPlayer(videoView)
-                videoView.start()
-            }
-        }
+        VideoViewDialog(this, url) {
+            viewModel.closeVideoDialog()
+        }.show()
     }
 
+    // Private methods
+
     private fun setupSearchView() {
-        val adapter = TweetSearchAdapter(onTweetClick = { startTweetDetailActivity(it) },
+        val adapter = TweetSearchAdapter(
+            onTweetClick = { startTweetDetailActivity(it) },
             onMediaClick = {
                 if (it.type == "video") it.video?.url?.let { url ->
                     viewModel.showVideoDialog(url)
                 } else viewModel.showImageDialog(it.url)
             })
+        searchView.imeOptions = searchView.imeOptions or EditorInfo.IME_FLAG_NO_EXTRACT_UI
         searchResultsRecyclerView.layoutManager = LinearLayoutManager(this).apply {
             orientation = LinearLayoutManager.VERTICAL
         }
@@ -251,13 +213,6 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
                 return true
             }
         })
-        searchView.imeOptions = searchView.imeOptions or EditorInfo.IME_FLAG_NO_EXTRACT_UI
-    }
-
-    private fun startTweetDetailActivity(tweet: Tweet) {
-        val intent = Intent(this, TweetDetailActivity::class.java)
-        intent.putExtra("tweetId", tweet.id)
-        startActivity(intent)
     }
 
     private fun moveCameraToLocation() {
@@ -280,7 +235,7 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
         viewModel.getMapTweets().observe(this, Observer<List<Tweet>> { tweets ->
             tweets?.let {
                 addMarkers(it)
-                Toast.makeText(this, "Found ${it.size} tweets with geolocation enabled", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.tweet_geoquery_result, it.size), Toast.LENGTH_SHORT).show()
             }
         })
         viewModel.isShowingImageDialog().observe(this, Observer<Boolean> { isShowingImageDialog ->
@@ -338,5 +293,4 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
             viewModel = ViewModelProviders.of(this, factory).get(MapsViewModel::class.java)
         }
     }
-
 }

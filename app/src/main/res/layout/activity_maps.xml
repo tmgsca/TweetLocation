@@ -16,6 +16,7 @@
                 app:queryBackground="@android:color/transparent"
                 android:queryBackground="@android:color/transparent"
                 android:id="@+id/searchView"
+                android:queryHint="@string/search_tweet"
                 android:elevation="3dp"
                 android:background="@android:color/white"/>
 

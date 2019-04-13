@@ -1,14 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Tweet Location</string>
-    <string name="title_activity_maps">Map</string>
     <string name="com.twitter.sdk.android.CONSUMER_KEY" tools:ignore="ExtraTranslation">1BhfmotUbRLicvfCwNsIcw7uS
     </string>
     <string name="com.twitter.sdk.android.CONSUMER_SECRET" tools:ignore="ExtraTranslation">
         bsCrSiZsPR2c0sD27UM1BBqGFqryNtVfdFBobSg4hjUx3sVb1V
     </string>
+    <string name="search_tweet">Search a tweet…</string>
+    <string name="app_name">Tweet Finder</string>
+    <string name="title_activity_maps">Map</string>
     <string name="twitter_login_failed">Twitter login failed</string>
-    <string name="detail">Detail</string>
-    <string name="placeholder">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean at risus massa. Vivamus turpis nisi, congue et laoreet non, elementum vitae massa. Integer sit amet nunc vitae odio semper posuere vitae aliquet turpis. Integer molestie lacinia diam in consequat. Phasellus volutpat. </string>
-    <string name="favorite">Favorite</string>
-    <string name="retweet">Retweet</string>
+    <string name="tweet_geoquery_result">Found %1$d tweets with geolocation enabled</string>
+    <string name="user_screen_name" translatable="false">\@%1$s</string>
+    <string name="placeholder" translatable="false">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam tortor
+        lorem, posuere sit amet neque nec, ultricies suscipit orci. Nulla eget velit orci. Aenean lacinia lectus a
+        tortor ullamcorper dapibus. Nunc dapibus sed enim nec finibus. In eu aliquam elit. Nam ullamcorper metus.
+    </string>
 </resources>

@@ -1,12 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
-              android:orientation="vertical"
-              android:layout_width="match_parent" android:padding="8dp"
-              android:layout_height="match_parent">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:maxWidth="300dp"
+                android:padding="8dp">
 
-    <android.support.v7.widget.AppCompatTextView android:id="@+id/userScreenNameTextView" android:layout_width="wrap_content" android:maxWidth="200dp" android:layout_height="wrap_content" tools:text="\@username"
-                                                 android:layout_marginBottom="8dp" android:textStyle="bold"/>
-    <android.support.v7.widget.AppCompatTextView android:id="@+id/content" android:layout_width="wrap_content" android:maxWidth="200dp" android:maxLines="3" android:layout_height="wrap_content"
-                                                 tools:text="Lorem ipsum sit dolor amet"/>
+    <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:id="@+id/userInfoRelativeLayout">
 
-</LinearLayout>
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                  android:textSize="16sp" android:textStyle="bold"
+
+                  android:id="@+id/userNameTextView" tools:text="John Doe"/>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                  android:textSize="12sp"
+                  android:layout_toEndOf="@id/userNameTextView"
+                  android:gravity="center_vertical"
+                  android:layout_alignTop="@id/userNameTextView"
+                  android:layout_alignBottom="@id/userNameTextView"
+                  android:layout_marginStart="8dp"
+                  android:lines="1" android:ellipsize="end"
+                  android:id="@+id/userScreenNameTextView"
+                  tools:text="\@johndoe"/>
+
+        <TextView tools:text="2019-01-01 00:00"
+                  android:layout_alignStart="@id/userNameTextView"
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:layout_below="@id/userNameTextView"
+                  android:id="@+id/createdAtTextView"
+                  android:layout_marginTop="4dp"/>
+
+    </RelativeLayout>
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+              android:layout_below="@id/userInfoRelativeLayout"
+              android:layout_alignStart="@id/userInfoRelativeLayout"
+              android:id="@+id/textTextView" android:ellipsize="end"
+              tools:text="@string/placeholder" android:layout_marginTop="4dp"/>
+</RelativeLayout>

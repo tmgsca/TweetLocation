@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_tweet">Trouvez un tweet…</string>
+    <string name="app_name">Trouveur de Tweets</string>
+    <string name="title_activity_maps">Carte</string>
+    <string name="twitter_login_failed">Échec dans l\'authentification avec Twitter</string>
+    <string name="tweet_geoquery_result">%1$d tweets trouvés avec géolocalization</string>
+</resources>
