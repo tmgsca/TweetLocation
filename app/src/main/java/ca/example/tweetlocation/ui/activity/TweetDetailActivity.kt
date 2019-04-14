@@ -30,6 +30,7 @@ class TweetDetailActivity : AppCompatActivity() {
         setupObservers()
         setupActionListeners()
         setupRecyclerView()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     private fun setupViewModel() {
