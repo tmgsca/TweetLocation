@@ -3,15 +3,18 @@ package ca.example.tweetlocation.model
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
-import android.location.Location
 import ca.example.tweetlocation.data.TweetRepository
 import com.twitter.sdk.android.core.models.Tweet
 import com.twitter.sdk.android.core.services.params.Geocode
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
+import java.util.stream.Collectors
 
 class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
 
     companion object {
-        private const val DISTANCE = 10
+        private const val DISTANCE = 5
+        private const val MAX_MARKERS = 100
     }
 
     // Properties
@@ -57,24 +60,33 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
         }
     }
 
-    fun queryTweets(query: String, location: Location) {
-        val geocode = Geocode(location.latitude, location.longitude, DISTANCE, Geocode.Distance.KILOMETERS)
-        loading.value = true
-        repository.getTweets(query, geocode) { results ->
-            val filteredResults = results.filter { r -> r.coordinates != null }
-            mapTweets.value?.let { currentTweets ->
-                val oldTweets = ArrayList(currentTweets)
-                oldTweets.addAll(filteredResults.filter { !oldTweets.map { tweet -> tweet.id }.contains(it.id) })
-                oldTweets.sortBy { it.createdAt }
-                if (oldTweets.count() > 100) {
-                    mapTweets.value = oldTweets.drop(oldTweets.count() - 100)
-                } else {
-                    mapTweets.value = oldTweets
+    fun queryGeocodedTweets(query: String) {
+        latitude?.let { lat ->
+            longitude?.let { lng ->
+                val geocode = Geocode(lat, lng, DISTANCE, Geocode.Distance.KILOMETERS)
+                repository.getTweets(query, geocode) { results ->
+                    doAsync {
+                        val filteredResults = results.parallelStream().filter { r -> r.coordinates != null }
+                        mapTweets.value?.let { currentTweets ->
+                            val oldTweets = ArrayList(currentTweets)
+                            val oldTweetsSet = oldTweets.map { it.id }.toSet()
+                            oldTweets.addAll(filteredResults.filter { it.id !in oldTweetsSet }.collect(Collectors.toList()))
+                            oldTweets.sortBy { it.createdAt }
+                            uiThread {
+                                if (oldTweets.count() > MAX_MARKERS) {
+                                    mapTweets.value = oldTweets.drop(oldTweets.count() - MAX_MARKERS)
+                                } else {
+                                    mapTweets.value = oldTweets
+                                }
+                            }
+                        } ?: run {
+                            uiThread {
+                                mapTweets.value = filteredResults.collect(Collectors.toList()).sortedBy { it.createdAt }
+                            }
+                        }
+                    }
                 }
-            } ?: run {
-                mapTweets.value = ArrayList(filteredResults).sortedBy { it.createdAt }
             }
-            loading.value = false
         }
     }
 

@@ -18,7 +18,6 @@ import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.SearchView
-import android.widget.Toast
 import ca.example.tweetlocation.R
 import ca.example.tweetlocation.data.SessionUtils
 import ca.example.tweetlocation.data.TweetRepository
@@ -31,11 +30,11 @@ import ca.example.tweetlocation.ui.view.TweetInfoWindow
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import com.twitter.sdk.android.core.models.Tweet
 import kotlinx.android.synthetic.main.activity_maps.*
+import java.util.*
+import kotlin.concurrent.fixedRateTimer
 
 class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWindowClickListener {
 
@@ -46,9 +45,12 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
         private const val LOCATION_REQUEST_MIN_DISTANCE = 100f
     }
 
+    private var userCircle: Circle? = null
     private var googleMap: GoogleMap? = null
+    private var markers: MutableList<Marker> = mutableListOf()
     private var locationManager: LocationManager? = null
     private lateinit var viewModel: MapsViewModel
+    private var tweetQueryTimer: Timer? = null
 
     // Lifecycle methods
 
@@ -76,11 +78,30 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
     override fun onDestroy() {
         super.onDestroy()
         locationManager?.removeUpdates(this)
+        tweetQueryTimer?.cancel()
+        tweetQueryTimer = null
+    }
+
+    override fun onStop() {
+        super.onStop()
+        tweetQueryTimer?.cancel()
+        tweetQueryTimer = null
     }
 
     override fun onStart() {
         super.onStart()
         setupLocationListener()
+        setupQueryTimer()
+    }
+
+    private fun setupQueryTimer() {
+        if (tweetQueryTimer == null) {
+            tweetQueryTimer = fixedRateTimer("tweetQueryTimer", false, 0, 10000) {
+                runOnUiThread {
+                    viewModel.queryGeocodedTweets(" ")
+                }
+            }
+        }
     }
 
     // Map InfoWindow click listener
@@ -131,12 +152,23 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
             if (viewModel.latitude == null && viewModel.longitude == null) {
                 viewModel.latitude = it.latitude
                 viewModel.longitude = it.longitude
-                viewModel.queryTweets(" ", it)
-                moveCameraToLocation()
+                viewModel.queryGeocodedTweets(" ")
+                moveCameraAndZoomToLocation()
             } else {
                 viewModel.latitude = it.latitude
                 viewModel.longitude = it.longitude
+                moveCameraToLocation()
             }
+            userCircle?.remove()
+            userCircle = googleMap?.addCircle(
+                CircleOptions()
+                    .center(
+                        LatLng(it.latitude, it.longitude)
+                    )
+                    .radius(5000.0)
+                    .strokeColor(getColor(R.color.colorPrimary))
+                    .fillColor(getColor(R.color.circleFill))
+            )
         }
     }
 
@@ -226,6 +258,17 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
         }
     }
 
+    private fun moveCameraAndZoomToLocation() {
+        googleMap?.let { m ->
+            viewModel.latitude?.let { latitude ->
+                viewModel.longitude?.let { longitude ->
+                    val position = LatLng(latitude, longitude)
+                    m.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 10.0f))
+                }
+            }
+        }
+    }
+
     private fun setupObservers() {
         viewModel.getLoading().observe(this, Observer<Boolean> { loading ->
             loading?.let {
@@ -235,7 +278,6 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
         viewModel.getMapTweets().observe(this, Observer<List<Tweet>> { tweets ->
             tweets?.let {
                 addMarkers(it)
-                Toast.makeText(this, getString(R.string.tweet_geoquery_result, it.size), Toast.LENGTH_SHORT).show()
             }
         })
         viewModel.isShowingImageDialog().observe(this, Observer<Boolean> { isShowingImageDialog ->
@@ -275,14 +317,27 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
     }
 
     private fun addMarkers(tweets: Collection<Tweet>) {
-        googleMap?.clear()
-        tweets
-            .filter { it.coordinates != null }
-            .forEach {
-                val options = MarkerOptions().position(LatLng(it.coordinates.latitude, it.coordinates.longitude))
-                    .title("@${it.user.screenName}").snippet(it.text)
-                val marker = googleMap?.addMarker(options)
-                marker?.tag = it
+
+        // Convert to set to improve filter performance
+        val tweetSet = tweets.toSet()
+        val currentMarkedTweetsSet = (markers.map { marker -> marker.tag as Tweet }).toSet()
+
+        // Remove deleted markers
+        markers.filter { it.tag as Tweet !in tweetSet }.forEach { it.remove() }
+
+        // Add tweets after subtracting from the current marker set
+        tweets.parallelStream()
+            .filter { it !in currentMarkedTweetsSet }
+            .forEach { tweet ->
+                val position = LatLng(tweet.coordinates.latitude, tweet.coordinates.longitude)
+                val options = MarkerOptions().position(position)
+                runOnUiThread {
+                    googleMap?.let {
+                        val marker = it.addMarker(options)
+                        marker?.tag = tweet
+                        markers.add(marker)
+                    }
+                }
             }
     }
 

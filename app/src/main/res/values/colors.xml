@@ -3,5 +3,5 @@
     <color name="colorPrimary">#1dcaff</color>
     <color name="colorPrimaryDark">#0084b4</color>
     <color name="colorAccent">#3b4d56</color>
-    <color name="disabledButton">#7f7f7f</color>
+    <color name="circleFill">#441dcaff</color>
 </resources>
