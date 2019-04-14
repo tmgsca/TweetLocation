@@ -12,7 +12,7 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
     ViewModel() {
 
     init {
-        repository.getTweet(id) {
+        repository.getTweet(id, onSuccess = {
             userFullname.value = it.user.name
             text.value = it.text
             userScreenName.value = it.user.screenName
@@ -25,13 +25,19 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
             coordinates.value = extractCoordinates(it)
             media.value = extractTweetMedia(it)
             loading.value = false
-        }
+        }, onFailure = { requestError.value = true })
     }
 
     // Properties
 
     var videoDialogUrl: String? = null
     var imageDialogUrl: String? = null
+
+    private val requestError: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>().also {
+            it.value = false
+        }
+    }
 
     private val isShowingImageDialog: MutableLiveData<Boolean> by lazy {
         MutableLiveData<Boolean>().also {
@@ -95,6 +101,7 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
 
     // Accessors
 
+    fun isRequestError() = requestError as LiveData<Boolean>
     fun isShowingImageDialog() = isShowingImageDialog as LiveData<Boolean>
     fun isShowingVideoDialog() = isShowingVideoDialog as LiveData<Boolean>
     fun isLoading(): LiveData<Boolean> = loading
@@ -113,24 +120,24 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
     // UI Actions
 
     fun retweet() {
-        repository.retweet(id) {
+        repository.retweet(id, onSuccess = {
             retweetCount.value = it.retweetCount
             retweeted.value = it.retweeted
-        }
+        }, onFailure = { requestError.value = true })
     }
 
     fun favorite() {
-        repository.favoriteTweet(id) {
+        repository.favoriteTweet(id, onSuccess = {
             favoriteCount.value = it.retweetedStatus?.favoriteCount ?: it.favoriteCount
             favorited.value = it.favorited
-        }
+        }, onFailure = { requestError.value = true })
     }
 
     fun unfavorite() {
-        repository.unfavoriteTweet(id) {
+        repository.unfavoriteTweet(id, onSuccess = {
             favoriteCount.value = it.favoriteCount
             favorited.value = it.favorited
-        }
+        }, onFailure = { requestError.value = true })
     }
 
 
@@ -152,6 +159,10 @@ class TweetDetailViewModel(private val id: Long, private val repository: TweetRe
     fun closeImageDialog() {
         isShowingImageDialog.value = false
         imageDialogUrl = null
+    }
+
+    fun clearErrorMessage() {
+        requestError.value = false
     }
 
     // Helpers

@@ -3,6 +3,7 @@ package ca.example.tweetlocation.ui.activity
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.view.View
@@ -110,6 +111,15 @@ class TweetDetailActivity : AppCompatActivity() {
         viewModel.isShowingVideoDialog().observe(this, Observer<Boolean> { isShowingVideoDialog ->
             isShowingVideoDialog?.let {
                 if (it) viewModel.videoDialogUrl?.let { url -> showVideoDialog(url) }
+            }
+        })
+
+        viewModel.isRequestError().observe(this, Observer<Boolean> {
+            it?.let { isError ->
+                if (isError) {
+                    Snackbar.make(coordinatorLayout, getString(R.string.generic_error), Snackbar.LENGTH_LONG).show()
+                    viewModel.clearErrorMessage()
+                }
             }
         })
     }

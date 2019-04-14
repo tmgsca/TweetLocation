@@ -24,6 +24,12 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
     var videoDialogUrl: String? = null
     var imageDialogUrl: String? = null
 
+    private val requestError: MutableLiveData<Boolean> by lazy {
+        MutableLiveData<Boolean>().also {
+            it.value = false
+        }
+    }
+
     private val isShowingImageDialog: MutableLiveData<Boolean> by lazy {
         MutableLiveData<Boolean>().also {
             it.value = false
@@ -54,17 +60,17 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
 
     fun queryTweets(query: String) {
         loading.value = true
-        repository.getTweets(query) {
-            searchTweets.value = it
+        repository.getTweets(query, onSuccess = { results ->
+            searchTweets.value = results
             loading.value = false
-        }
+        }, onFailure = { requestError.value = true })
     }
 
     fun queryGeocodedTweets(query: String) {
         latitude?.let { lat ->
             longitude?.let { lng ->
                 val geocode = Geocode(lat, lng, DISTANCE, Geocode.Distance.KILOMETERS)
-                repository.getTweets(query, geocode) { results ->
+                repository.getTweets(query, geocode, onSuccess = { results ->
                     doAsync {
                         val filteredResults = results.parallelStream().filter { r -> r.coordinates != null }
                         mapTweets.value?.let { currentTweets ->
@@ -85,7 +91,7 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
                             }
                         }
                     }
-                }
+                }, onFailure = { requestError.value = true })
             }
         }
     }
@@ -116,8 +122,13 @@ class MapsViewModel(private val repository: TweetRepository) : ViewModel() {
         imageDialogUrl = null
     }
 
+    fun clearErrorMessage() {
+        requestError.value = false
+    }
+
     // Accessors
 
+    fun isRequestError() = requestError as LiveData<Boolean>
     fun getLoading() = loading as LiveData<Boolean>
     fun getSearchTweets() = searchTweets as LiveData<List<Tweet>>
     fun getMapTweets() = mapTweets as LiveData<List<Tweet>>

@@ -5,6 +5,7 @@
     <string name="com.twitter.sdk.android.CONSUMER_SECRET" tools:ignore="ExtraTranslation">
         bsCrSiZsPR2c0sD27UM1BBqGFqryNtVfdFBobSg4hjUx3sVb1V
     </string>
+    <string name="generic_error">Something went wrong with a request</string>
     <string name="search_tweet">Search a tweet…</string>
     <string name="app_name">Tweet Finder</string>
     <string name="title_activity_maps">Map</string>

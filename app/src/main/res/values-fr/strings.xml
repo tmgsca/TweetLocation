@@ -3,6 +3,7 @@
     <string name="search_tweet">Trouvez un tweet…</string>
     <string name="app_name">Trouveur de Tweets</string>
     <string name="title_activity_maps">Carte</string>
+    <string name="generic_error">Quelque chose s\'est mal passé avec la requête</string>
     <string name="twitter_login_failed">Échec dans l\'authentification avec Twitter</string>
     <string name="tweet_geoquery_result">%1$d tweets trouvés avec géolocalization</string>
 </resources>

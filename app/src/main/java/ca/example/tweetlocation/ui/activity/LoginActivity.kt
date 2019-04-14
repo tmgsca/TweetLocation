@@ -1,14 +1,16 @@
 package ca.example.tweetlocation.ui.activity
 
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import ca.example.tweetlocation.R
 import ca.example.tweetlocation.data.SessionUtils
-import com.twitter.sdk.android.core.*
-
+import com.twitter.sdk.android.core.Callback
+import com.twitter.sdk.android.core.Result
+import com.twitter.sdk.android.core.TwitterException
+import com.twitter.sdk.android.core.TwitterSession
 import kotlinx.android.synthetic.main.activity_login.*
 
 class LoginActivity : AppCompatActivity() {
@@ -30,7 +32,7 @@ class LoginActivity : AppCompatActivity() {
 
             override fun failure(exception: TwitterException) {
                 Log.e(TAG, exception.localizedMessage, exception)
-                Snackbar.make(coordinatorLayout, getString(R.string.twitter_login_failed), 3).show()
+                Snackbar.make(coordinatorLayout, getString(R.string.twitter_login_failed), Snackbar.LENGTH_LONG).show()
             }
         }
     }

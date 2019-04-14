@@ -10,6 +10,7 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
@@ -69,8 +70,9 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
                     this,
                     Manifest.permission.ACCESS_FINE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
-            )
+            ) {
                 googleMap?.isMyLocationEnabled = true
+            }
             setupObservers()
         }
     }
@@ -290,10 +292,19 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
                 if (it) viewModel.videoDialogUrl?.let { url -> showVideoDialog(url) }
             }
         })
+
+        viewModel.isRequestError().observe(this, Observer<Boolean> {
+            it?.let { isError ->
+                if (isError) {
+                    Snackbar.make(coordinatorLayout, getString(R.string.generic_error), Snackbar.LENGTH_LONG).show()
+                    viewModel.clearErrorMessage()
+                }
+            }
+        })
     }
 
     private fun setupLocationListener() {
-        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -307,7 +318,7 @@ class MapsActivity : AppCompatActivity(), LocationListener, GoogleMap.OnInfoWind
 
         } else {
             googleMap?.isMyLocationEnabled = true
-            locationManager.requestLocationUpdates(
+            locationManager?.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
                 LOCATION_REQUEST_MIN_TIME,
                 LOCATION_REQUEST_MIN_DISTANCE,
