@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="com.twitter.sdk.android.CONSUMER_KEY" tools:ignore="ExtraTranslation">1BhfmotUbRLicvfCwNsIcw7uS
+    <string name="com.twitter.sdk.android.CONSUMER_KEY" tools:ignore="ExtraTranslation">CONSUMER_KEY
     </string>
     <string name="com.twitter.sdk.android.CONSUMER_SECRET" tools:ignore="ExtraTranslation">
-        bsCrSiZsPR2c0sD27UM1BBqGFqryNtVfdFBobSg4hjUx3sVb1V
+        CONSUMER_SECRET
     </string>
     <string name="generic_error">Something went wrong with a request</string>
     <string name="search_tweet">Search a tweet…</string>
